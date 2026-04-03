@@ -3,35 +3,31 @@ import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten
 from tensorflow.keras.utils import to_categorical
+from sklearn.model_selection import train_test_split
 
-# Load dataset
-train = pd.read_csv("mnist_train.csv")
-test = pd.read_csv("mnist_test.csv")
+# Load small dataset
+data = pd.read_csv("mnist_small.csv")
 
-# Split features and labels
-X_train = train.iloc[:, 1:].values
-y_train = train.iloc[:, 0].values
-
-X_test = test.iloc[:, 1:].values
-y_test = test.iloc[:, 0].values
+X = data.iloc[:, 1:].values
+y = data.iloc[:, 0].values
 
 # Normalize
-X_train = X_train / 255.0
-X_test = X_test / 255.0
+X = X / 16.0   # NOTE: digits dataset uses 0–16
 
-# Reshape
-X_train = X_train.reshape(-1, 28, 28)
-X_test = X_test.reshape(-1, 28, 28)
+# Reshape (8x8 images)
+X = X.reshape(-1, 8, 8)
 
 # One-hot encoding
-y_train = to_categorical(y_train, 10)
-y_test = to_categorical(y_test, 10)
+y = to_categorical(y, 10)
+
+# Split train/test
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 # Model
 model = Sequential([
-    Flatten(input_shape=(28,28)),
-    Dense(128, activation='relu'),
+    Flatten(input_shape=(8,8)),
     Dense(64, activation='relu'),
+    Dense(32, activation='relu'),
     Dense(10, activation='softmax')
 ])
 
@@ -39,7 +35,7 @@ model.compile(optimizer='adam',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
 
-model.fit(X_train, y_train, epochs=5, batch_size=32)
+model.fit(X_train, y_train, epochs=5)
 
 model.save("mnist_model.h5")
 
